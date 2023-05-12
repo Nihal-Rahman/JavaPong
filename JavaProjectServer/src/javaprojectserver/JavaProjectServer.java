@@ -69,7 +69,8 @@ public class JavaProjectServer{
 
                 sout.println(userData[0]);
                 sout.println(userData[1]);
-                sout.println(userData[2]);     
+                sout.println(userData[2]);
+                sout.println(numPlayers);
                
                 
                 ReadFromClient rfc = new ReadFromClient(numPlayers, sin);
@@ -160,8 +161,10 @@ public class JavaProjectServer{
                 while(true){
                     if(playerID==1){
                         p1y = dataIn.nextLine();
+                        System.out.println("P1: " + dataIn.nextLine());
                     }
                     else{
+                        //System.out.println("P2: " + dataIn.nextLine());
                         p2y = dataIn.nextLine();
                     }
                 }
@@ -183,9 +186,11 @@ public class JavaProjectServer{
             try{
                 while(true){
                     if(playerID==1){
+                        //System.out.println("Im writing this: "+ p2y);
                         dataOut.println(p2y);
                     }
                     else{
+                        System.out.println("Im writing this: "+ p1y);
                         dataOut.println(p1y);
                     }
                     try{

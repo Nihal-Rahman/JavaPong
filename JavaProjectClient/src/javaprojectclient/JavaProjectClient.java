@@ -25,6 +25,7 @@ public class JavaProjectClient{
     static PrintWriter sout;
     static Thread t = new Thread();
     static WaitingRoom wr;
+    static int playerID;
     
     
     public static void main(String[] args) {
@@ -33,22 +34,6 @@ public class JavaProjectClient{
     
 }
 
-
-class checkReady implements Runnable{
-    @Override
-    public void run(){
-        String messages;
-        try{
-            while(JavaProjectClient.sin.hasNext()){
-                if(JavaProjectClient.sin.nextLine().equals("Ready")){
-                    JavaProjectClient.t.interrupt();
-                    JavaProjectClient.wr.jf.setVisible(false);
-                    new GameGUI();
-                }
-            }
-        } catch(Exception e){}
-    }
-}
 
 
 class LoginInterface{
@@ -115,6 +100,10 @@ class ButtonPressed implements ActionListener{
                    loss = JavaProjectClient.sin.nextLine();
                    break;
                 }
+                if(counter == 3){
+                    JavaProjectClient.playerID = Integer.parseInt(JavaProjectClient.sin.nextLine());
+                    break;
+                }
                 counter += 1;
             }
         } catch(Exception e1){
@@ -155,6 +144,24 @@ class WaitingRoom{
         
 }
 
+
+class checkReady implements Runnable{
+    @Override
+    public void run(){
+        String messages;
+        try{
+            while(JavaProjectClient.sin.hasNext()){
+                if(JavaProjectClient.sin.nextLine().equals("Ready")){
+                    JavaProjectClient.t.interrupt();
+                    JavaProjectClient.wr.jf.setVisible(false);
+                    
+                    new GameGUI();
+                }
+            }
+        } catch(Exception e){}
+    }
+}
+
 class GameGUI{
     
     private ReadFromServer rfsRunnable = new ReadFromServer(JavaProjectClient.sin);
@@ -163,14 +170,15 @@ class GameGUI{
     
     GameGUI(){
         
-        Test g = new Test();
+        Paddle g = new Paddle();
         jf.setSize(500,500);
         
         
-        Test g1 = new  Test();
+        Paddle g1 = new  Paddle();
         jf.add(g1);
         
         
+       
         Thread readThread = new Thread(rfsRunnable);
         Thread writeThread = new Thread(wtsRunnable);
         
@@ -180,6 +188,7 @@ class GameGUI{
         jf.setVisible(true);
     }
     
+
     class ReadFromServer implements Runnable {
     private Scanner dataIn;
         
@@ -190,7 +199,8 @@ class GameGUI{
         public void run(){
             try{
                 while(true){
-                    Test.y = Integer.parseInt(dataIn.nextLine());
+                    System.out.println(dataIn.nextLine());
+                    Paddle.y = Integer.parseInt(dataIn.nextLine());
                 }
             }
             catch(Exception ie){}
@@ -207,7 +217,7 @@ class GameGUI{
         public void run(){
             try{
                 while(true){
-                    dataOut.println(Test.y);
+                    dataOut.println(Paddle.y);
                     try{
                         Thread.sleep(25);
                     }catch(InterruptedException e){
@@ -221,12 +231,12 @@ class GameGUI{
     }
 }
 
-class Test extends JPanel implements ActionListener, KeyListener{
+class Paddle extends JPanel implements ActionListener, KeyListener{
     Timer tm=new Timer(2,this);
     
     static int x=0,y=0,velY=0;
     
-    Test(){
+    Paddle(){
         tm.start();
         addKeyListener(this);
         setFocusable(true); 
@@ -265,19 +275,13 @@ class Test extends JPanel implements ActionListener, KeyListener{
         if (c == KeyEvent.VK_UP)
            {
                velY = -3; // means up 
-               JavaProjectClient.sout.println(String.valueOf(velY));
            }
 
         if (c == KeyEvent.VK_DOWN)  
         {
             velY = 3; 
-            JavaProjectClient.sout.println(String.valueOf(velY));
         }
-        
-        
-        System.out.println(JavaProjectClient.sin.hasNextLine());
-        
-        
+           
     }
     public void keyTyped(KeyEvent e){}
     public void keyReleased(KeyEvent e){
