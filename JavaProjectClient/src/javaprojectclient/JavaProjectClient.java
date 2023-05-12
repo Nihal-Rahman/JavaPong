@@ -278,20 +278,18 @@ class GameGUI{
         }
         
         public void run(){
-            try{
-                while(true){
-                    if(player2 != null){
-                        try{
-                            Thread.sleep(25);
-                        }catch(Exception e){}
-                        System.out.print(dataIn.nextLine());
-                        String value = dataIn.nextLine();
-                        player2.setY(Double.parseDouble(value));
-                    }
-                    
+            while(true){
+                if(player2 != null){
+                    String value;
+                    try{
+                        while((value = dataIn.nextLine()) != null){
+                            player2.setY(Double.parseDouble(value));
+                        }
+                    }catch(Exception e){}
+
                 }
+
             }
-            catch(Exception ie){}
         }
     }
 
