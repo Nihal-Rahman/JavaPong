@@ -68,12 +68,29 @@ class ProcessConnection extends Thread{
             if(JavaProjectServer.numConnects == 2){
                 broadcast("Ready");
             }
+            
+            /*
+            while(true){
+                if(sin.hasNext()){
+                    String velY = sin.nextLine();
+                    //System.out.println(velY);
+                    broadcast(velY);
+                }
+            }
+            */
+            
+            String message;
+            while((message = sin.nextLine()) != null){
+                broadcast(message);
+            }
+            
             /*
             client.close();
             sin.close();
             sout.close();
             */
         }catch(Exception e){
+            System.out.println(e);
             System.out.println(client.getInetAddress()+" disconnected");
         }
     }
@@ -81,26 +98,26 @@ class ProcessConnection extends Thread{
     private String[] obtainUser(Connection conn, String username) throws SQLException {
         int win = 0;
         int loss = 0;
+        String[] data = {username, String.valueOf(0), String.valueOf(0)};
         PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Leaderboard WHERE username=?");
         stmt.setString(1, username);
         ResultSet rs = stmt.executeQuery();
         boolean isThere = rs.next();
         if(!isThere){
-           stmt = conn.prepareStatement("INSERT INTO Leaderboard (username) VALUES (?)");
+           stmt = conn.prepareStatement("INSERT INTO Leaderboard (username) VALUES (?);");
            stmt.setString(1, username);
-           rs = stmt.executeQuery();
-           isThere = rs.next();
-           win = rs.getInt("numWins");
-           loss = rs.getInt("numLoss");
+           stmt.setString(2, username);
+           rs = stmt.executeQuery();      
         }
         else{
             win = rs.getInt("numWins");
             loss = rs.getInt("numLoss");
+            data[1] = String.valueOf(win);
+            data[2] = String.valueOf(loss);
         }
         
         stmt.close();
         rs.close();
-        String[] data = {username, String.valueOf(win), String.valueOf(loss)};
         
         JavaProjectServer.clients.put(username, client);
         return data;

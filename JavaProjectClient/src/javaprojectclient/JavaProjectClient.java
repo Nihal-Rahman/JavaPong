@@ -9,6 +9,11 @@ import java.awt.event.*;
 import java.net.*;
 import javax.swing.*;
 import java.util.*;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import javax.swing.Timer;
+
 /**
  *
  * @author nihalrahman
@@ -158,9 +163,82 @@ class WaitingRoom{
 }
 
 class GameGUI{
+    
+    static JFrame jf = new JFrame("Game On!");
+    
     GameGUI(){
-        JFrame jf = new JFrame("Game On!");
+        Test g = new Test();
         jf.setSize(500,500);
+        
+        
+        Test g1 = new  Test();
+        jf.add(g1);
         jf.setVisible(true);
     }
 }
+
+class Test extends JPanel implements ActionListener, KeyListener{
+    Timer tm=new Timer(2,this);
+    
+    int x=0,y=0,velX=0,velY=0;
+    
+    Test(){
+        tm.start();
+        addKeyListener(this);
+        setFocusable(true); 
+        setFocusTraversalKeysEnabled(false); 
+    }
+    
+     public void paintComponent(Graphics g){
+        super.paintComponent(g);
+        g.setColor(Color.red);
+        g.fillRect(x,y,50,30);
+    }     
+     
+    public void actionPerformed(ActionEvent e){
+        
+        
+        if(y < 0)
+        {
+            velY=0;
+            y = 0;  
+        }
+
+        if(y > 450)
+        {
+            velY=0;
+            y = 450;  
+        }
+
+        y=y+velY;
+        repaint();
+        
+    }
+    
+    public void keyPressed(KeyEvent e){
+        int c = e.getKeyCode();
+
+        if (c == KeyEvent.VK_UP)
+           {
+               velX = 0;
+               velY = -3; // means up 
+               JavaProjectClient.sout.println(String.valueOf(velY));
+           }
+
+        if (c == KeyEvent.VK_DOWN)  
+        {
+            velX = 0;
+            velY = 3; 
+            JavaProjectClient.sout.println(String.valueOf(velY));
+        }
+        System.out.println(JavaProjectClient.sin.nextLine());
+        
+    }
+    public void keyTyped(KeyEvent e){}
+    public void keyReleased(KeyEvent e){
+        velX=0;
+        velY=0;
+     }
+}
+
+
