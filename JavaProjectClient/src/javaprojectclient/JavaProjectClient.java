@@ -12,6 +12,7 @@ import java.util.*;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.geom.Rectangle2D;
 import javax.swing.Timer;
 
 /**
@@ -98,7 +99,6 @@ class ButtonPressed implements ActionListener{
                 }
                 if(counter == 2){
                    loss = JavaProjectClient.sin.nextLine();
-                   break;
                 }
                 if(counter == 3){
                     JavaProjectClient.playerID = Integer.parseInt(JavaProjectClient.sin.nextLine());
@@ -162,6 +162,199 @@ class checkReady implements Runnable{
     }
 }
 
+
+class GameGUI{
+    
+    static JFrame jf = new JFrame("Player: " + JavaProjectClient.playerID);
+    private Paddle player1;
+    private Paddle player2;
+    private DrawingComponent dc;
+    private Timer t;
+    private boolean down = false;
+    private boolean up = false;
+    private ReadFromServer rfsRunnable = new ReadFromServer(JavaProjectClient.sin);
+    private WriteToServer wtsRunnable = new WriteToServer(JavaProjectClient.sout);
+    
+    GameGUI(){
+        jf.setSize(500,500);
+        createPaddles();
+        dc = new DrawingComponent();
+        jf.add(dc);
+                
+        jf.setVisible(true);
+        
+        animationSetUp();
+        keyActions();
+        
+        Thread readThread = new Thread(rfsRunnable);
+        Thread writeThread = new Thread(wtsRunnable);
+        
+        readThread.start();
+        writeThread.start();
+    }
+    
+    private void createPaddles(){
+        if(JavaProjectClient.playerID == 1){
+            player1 = new Paddle(0,0,50,Color.BLUE);
+            player2 = new Paddle(450,0,50,Color.RED);
+        }
+        else{
+            player2 = new Paddle(0,0,50,Color.BLUE);
+            player1 = new Paddle(450,0,50,Color.RED);
+        }
+        
+    }
+    
+    private class DrawingComponent extends JComponent{
+        protected void paintComponent(Graphics g){
+            Graphics2D g2d = (Graphics2D) g;
+            player1.drawSprite(g2d);
+            player2.drawSprite(g2d);
+        }
+    }
+    
+    private void animationSetUp(){
+        
+        ActionListener al = new ActionListener(){
+            public void actionPerformed(ActionEvent a){
+                
+                int speed = 3;
+                if(down){
+                    if(player1.getY() > 450){
+                        speed = 0;
+                    }
+                    player1.moveV(speed);
+                }
+                if(up){
+                    if(player1.getY() < 0){
+                        speed = 0;
+                    }
+                    player1.moveV(-speed);
+                }
+                dc.repaint();
+            }
+        };
+        
+        t = new Timer(5, al);
+        t.start();
+    }
+    
+    private void keyActions(){
+        KeyListener kl = new KeyListener(){
+            public void keyTyped(KeyEvent e){}
+            
+            public void keyPressed(KeyEvent e){
+                int c = e.getKeyCode();
+                
+                if(c == KeyEvent.VK_DOWN){
+                    down = true;
+                }
+                if(c == KeyEvent.VK_UP){
+                    up = true;
+                }
+            }
+            
+            public void keyReleased(KeyEvent e){
+                int c = e.getKeyCode();
+                
+                if(c == KeyEvent.VK_DOWN){
+                    down = false;
+                }
+                if(c == KeyEvent.VK_UP){
+                    up = false;
+                }
+            }
+        };
+        
+        jf.addKeyListener(kl);
+        jf.setFocusable(true);
+    }
+    
+    class ReadFromServer implements Runnable {
+        private Scanner dataIn;
+        
+        ReadFromServer(Scanner in){
+            dataIn = in;
+        }
+        
+        public void run(){
+            try{
+                while(true){
+                    if(player2 != null){
+                        try{
+                            Thread.sleep(25);
+                        }catch(Exception e){}
+                        System.out.print(dataIn.nextLine());
+                        String value = dataIn.nextLine();
+                        player2.setY(Double.parseDouble(value));
+                    }
+                    
+                }
+            }
+            catch(Exception ie){}
+        }
+    }
+
+    class WriteToServer implements Runnable {
+        private PrintWriter dataOut;
+        
+        WriteToServer(PrintWriter out){
+            dataOut = out;
+        }
+        
+        public void run(){
+            try{
+                while(true){
+                    if(player1 != null){
+                        dataOut.println(player1.getY());
+                    }
+                    try{
+                        Thread.sleep(25);
+                    }catch(InterruptedException e){
+                        System.out.println(e);
+                    }
+                }
+            }catch(Exception ex){
+                System.out.println(ex);
+            }
+        }
+    }
+    
+}
+
+
+class Paddle{
+    private double x,y,size;
+    private Color color;
+    
+    Paddle(double a, double b, double s, Color c){
+        x= a;
+        y = b;
+        size = s;
+        color = c;
+    }
+    
+    public void drawSprite(Graphics2D g2d){
+        Rectangle2D.Double square = new Rectangle.Double(x, y, size, size);
+        g2d.setColor(color);
+        g2d.fill(square);
+    }
+    
+    public void moveV(double n){
+        y+=n;
+    }
+    
+    public void setY(double n){
+        y = n;
+    }
+    
+    public double getY(){
+        return y;
+    }
+}
+
+
+/*
 class GameGUI{
     
     private ReadFromServer rfsRunnable = new ReadFromServer(JavaProjectClient.sin);
@@ -288,3 +481,4 @@ class Paddle extends JPanel implements ActionListener, KeyListener{
         velY=0;
      }
 }
+*/

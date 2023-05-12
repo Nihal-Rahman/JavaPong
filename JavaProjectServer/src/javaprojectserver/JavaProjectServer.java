@@ -161,7 +161,7 @@ public class JavaProjectServer{
                 while(true){
                     if(playerID==1){
                         p1y = dataIn.nextLine();
-                        System.out.println("P1: " + dataIn.nextLine());
+                        //System.out.println("P1: " + dataIn.nextLine());
                     }
                     else{
                         //System.out.println("P2: " + dataIn.nextLine());
@@ -186,11 +186,11 @@ public class JavaProjectServer{
             try{
                 while(true){
                     if(playerID==1){
-                        //System.out.println("Im writing this: "+ p2y);
+                        //System.out.println("Im writing this to P2: "+ p2y);
                         dataOut.println(p2y);
                     }
                     else{
-                        System.out.println("Im writing this: "+ p1y);
+                        System.out.println("Im writing this to P1 : "+ p1y);
                         dataOut.println(p1y);
                     }
                     try{
