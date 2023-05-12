@@ -15,85 +15,97 @@ public class JavaProjectServer{
     private static final String USERNAME = "root";
     private static final String PASSWORD = "nihal1234";
     private static final int PORT = 5190;
-    static int numConnects = 0;
+    private int numPlayers = 0;
+    private int maxPlayers = 2;
+    private ServerSocket server;
+    private Connection conn = null;
+    private ReadFromClient p1ReadRunnable;
+    private ReadFromClient p2ReadRunnable;
+    private WriteToClient p1WriteRunnable;
+    private WriteToClient p2WriteRunnable;
+    private Socket p1Socket;
+    private Socket p2Socket;
+    private String p1y, p2y;
+    
     
     static Map<String, Socket> clients = new HashMap<>();
     
-    public static void main(String[] args) {
-
-        Connection conn = null;
+    JavaProjectServer(){
         try{
             conn = DriverManager.getConnection(URL,USERNAME,PASSWORD);
             System.out.println("Connected to the database");
         } catch(SQLException e){
             System.out.println("Caught exception: "+e.toString());
         }
+
         try {
-            ServerSocket server = new ServerSocket(PORT);
-            while (true){
-                Socket client = server.accept(); //Blocking system call
-                System.out.println("Got a connection from: "+client.getInetAddress());
-                new ProcessConnection(client,conn).start();
-            }
+            server = new ServerSocket(PORT);
                 
         } catch (IOException ex) {
             System.out.println("Unable to bind to port "+PORT);
         }
+        
+        
     }
-}
-class ProcessConnection extends Thread{
-    Socket client;
-    Connection conn;
-    ProcessConnection(Socket newClient, Connection newConn){
-        client = newClient;
-        conn = newConn;
+    
+    public static void main(String[] args) {
+        JavaProjectServer js = new JavaProjectServer();
+        js.acceptConnections();
     }
-    @Override
-    public void run(){
+    
+    public void acceptConnections(){
         try{
-            Scanner sin = new Scanner(client.getInputStream());
-            PrintStream sout = new PrintStream(client.getOutputStream());
-            String username = sin.nextLine();
-            
-            String[] userData = obtainUser(conn, username);
-            
-            JavaProjectServer.numConnects += 1;
-            System.out.println(JavaProjectServer.numConnects);
-            
-            sout.println(userData[0]);
-            sout.println(userData[1]);
-            sout.println(userData[2]);
-            sout.println(JavaProjectServer.numConnects);
-            
-            if(JavaProjectServer.numConnects == 2){
-                broadcast("Ready");
-            }
-            
-            /*
-            while(true){
-                if(sin.hasNext()){
-                    String velY = sin.nextLine();
-                    //System.out.println(velY);
-                    broadcast(velY);
+            while(numPlayers < maxPlayers){
+                Socket s = server.accept();
+                numPlayers++;
+                
+                JavaProjectServer.clients.put(String.valueOf(numPlayers), s);
+                
+                Scanner sin = new Scanner(s.getInputStream());
+                PrintStream sout = new PrintStream(s.getOutputStream());
+                String username = sin.nextLine();
+                
+                String[] userData = obtainUser(conn, username);
+
+                sout.println(userData[0]);
+                sout.println(userData[1]);
+                sout.println(userData[2]);     
+               
+                
+                ReadFromClient rfc = new ReadFromClient(numPlayers, sin);
+                WriteToClient wtc = new WriteToClient(numPlayers, sout);
+                
+                if(numPlayers == 1){
+                    p1Socket = s;
+                    p1ReadRunnable = rfc;
+                    p1WriteRunnable = wtc;
+                }
+                else{
+                    p2Socket = s;
+                    p2ReadRunnable = rfc;
+                    p2WriteRunnable = wtc;
+                    
+                    broadcast("Ready");
+                    
+                    Thread readThread1 = new Thread(p1ReadRunnable);
+                    Thread readThread2 = new Thread(p2ReadRunnable);
+                    
+                    readThread1.start();
+                    readThread2.start();
+                    
+                    Thread writeThread1 = new Thread(p1WriteRunnable);
+                    Thread writeThread2 = new Thread(p2WriteRunnable);
+                    
+                    writeThread1.start();
+                    writeThread2.start();
+                    
                 }
             }
-            */
-            
-            String message;
-            while((message = sin.nextLine()) != null){
-                broadcast(message);
-            }
-            
-            /*
-            client.close();
-            sin.close();
-            sout.close();
-            */
-        }catch(Exception e){
-            System.out.println(e);
-            System.out.println(client.getInetAddress()+" disconnected");
+        } catch(Exception ex){
+            System.out.println("Connection error");
         }
     }
+    
     
     private String[] obtainUser(Connection conn, String username) throws SQLException {
         int win = 0;
@@ -119,19 +131,9 @@ class ProcessConnection extends Thread{
         stmt.close();
         rs.close();
         
-        JavaProjectServer.clients.put(username, client);
         return data;
     }
     
-    
-    private void logConnection(String username, String ipAddress, Connection conn) throws SQLException {
-        PreparedStatement stmt = conn.prepareStatement("INSERT INTO LOGINS (username, ip_address, time) VALUES (?, ?, ?)");
-        stmt.setString(1, username);
-        stmt.setString(2, ipAddress);
-        stmt.setString(3, LocalDateTime.now().toString());
-        stmt.executeUpdate();
-        stmt.close();
-    }
     
     private static void broadcast(String message) {
         for (Socket client : JavaProjectServer.clients.values()) {
@@ -141,6 +143,59 @@ class ProcessConnection extends Thread{
             } catch (IOException e) {
                  System.out.println("Unable to broadcast message");
             }
+        }
+    }
+    
+    private class ReadFromClient implements Runnable{
+        private int playerID;
+        private Scanner dataIn;
+        
+        public ReadFromClient(int pid, Scanner in){
+            playerID = pid;
+            dataIn = in;
+        }
+        
+        public void run(){
+            try{
+                while(true){
+                    if(playerID==1){
+                        p1y = dataIn.nextLine();
+                    }
+                    else{
+                        p2y = dataIn.nextLine();
+                    }
+                }
+            }
+            catch(Exception ie){}
+        }
+    }
+    
+    private class WriteToClient implements Runnable{
+        private int playerID;
+        private PrintStream dataOut;
+        
+        public WriteToClient(int pid, PrintStream out){
+            playerID = pid;
+            dataOut = out;
+        }
+        
+        public void run(){
+            try{
+                while(true){
+                    if(playerID==1){
+                        dataOut.println(p2y);
+                    }
+                    else{
+                        dataOut.println(p1y);
+                    }
+                    try{
+                        Thread.sleep(25);
+                    }catch(InterruptedException e){
+                        System.out.println(e);
+                    }
+                }
+            }
+            catch(Exception ie){}
         }
     }
 }

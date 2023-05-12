@@ -18,7 +18,7 @@ import javax.swing.Timer;
  *
  * @author nihalrahman
  */
-public class JavaProjectClient implements Runnable{
+public class JavaProjectClient{
 
     static Socket sock;
     static Scanner sin;
@@ -28,13 +28,6 @@ public class JavaProjectClient implements Runnable{
     
     
     public static void main(String[] args) {
-        JavaProjectClient client = new JavaProjectClient();
-        client.run();
-    }
-    
-    
-    @Override
-    public void run(){ 
         new LoginInterface();
     }
     
@@ -164,23 +157,74 @@ class WaitingRoom{
 
 class GameGUI{
     
+    private ReadFromServer rfsRunnable = new ReadFromServer(JavaProjectClient.sin);
+    private WriteToServer wtsRunnable = new WriteToServer(JavaProjectClient.sout);
     static JFrame jf = new JFrame("Game On!");
     
     GameGUI(){
+        
         Test g = new Test();
         jf.setSize(500,500);
         
         
         Test g1 = new  Test();
         jf.add(g1);
+        
+        
+        Thread readThread = new Thread(rfsRunnable);
+        Thread writeThread = new Thread(wtsRunnable);
+        
+        readThread.start();
+        writeThread.start();
+        
         jf.setVisible(true);
+    }
+    
+    class ReadFromServer implements Runnable {
+    private Scanner dataIn;
+        
+        ReadFromServer(Scanner in){
+            dataIn = in;
+        }
+        
+        public void run(){
+            try{
+                while(true){
+                    Test.y = Integer.parseInt(dataIn.nextLine());
+                }
+            }
+            catch(Exception ie){}
+        }
+    }
+
+    class WriteToServer implements Runnable {
+    private PrintWriter dataOut;
+        
+        WriteToServer(PrintWriter out){
+            dataOut = out;
+        }
+        
+        public void run(){
+            try{
+                while(true){
+                    dataOut.println(Test.y);
+                    try{
+                        Thread.sleep(25);
+                    }catch(InterruptedException e){
+                        System.out.println(e);
+                    }
+                }
+            }catch(Exception ex){
+                System.out.println(ex);
+            }
+        }
     }
 }
 
 class Test extends JPanel implements ActionListener, KeyListener{
     Timer tm=new Timer(2,this);
     
-    int x=0,y=0,velX=0,velY=0;
+    static int x=0,y=0,velY=0;
     
     Test(){
         tm.start();
@@ -220,25 +264,23 @@ class Test extends JPanel implements ActionListener, KeyListener{
 
         if (c == KeyEvent.VK_UP)
            {
-               velX = 0;
                velY = -3; // means up 
                JavaProjectClient.sout.println(String.valueOf(velY));
            }
 
         if (c == KeyEvent.VK_DOWN)  
         {
-            velX = 0;
             velY = 3; 
             JavaProjectClient.sout.println(String.valueOf(velY));
         }
-        System.out.println(JavaProjectClient.sin.nextLine());
+        
+        
+        System.out.println(JavaProjectClient.sin.hasNextLine());
+        
         
     }
     public void keyTyped(KeyEvent e){}
     public void keyReleased(KeyEvent e){
-        velX=0;
         velY=0;
      }
 }
-
-
