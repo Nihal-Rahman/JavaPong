@@ -8,12 +8,11 @@ import java.io.*;
 import java.net.*;
 import java.sql.*;
 import java.util.*;
-import java.time.LocalDateTime;
 
 public class JavaProjectServer{
     private static final String URL = "jdbc:mariadb://localhost:3306/JPong";
     private static final String USERNAME = "root";
-    private static final String PASSWORD = "nihal1234";
+    private static final String PASSWORD = "1234";
     private static final int PORT = 5190;
     private int numPlayers = 0;
     private int maxPlayers = 2;
@@ -134,7 +133,6 @@ public class JavaProjectServer{
         
         return data;
     }
-    
     
     private static void broadcast(String message) {
         for (Socket client : JavaProjectServer.clients.values()) {
