@@ -189,10 +189,13 @@ public class JavaProjectServer{
             try{
                 while(true){
                     if(playerID==1){
+                        dataOut.println("Here is paddle info");
                         dataOut.println(p2y);
                     }
                     else{
+                        dataOut.println("Here is paddle info");
                         dataOut.println(p1y);
+                        dataOut.println("Here is ball info");
                         dataOut.println(ballx);
                         dataOut.println(bally);
                     }

@@ -142,30 +142,30 @@ public class GameGUI  {
     }
     
     public void checkCollision(){
-        System.out.print(ball.x+" ");
-        System.out.println(ball.xVelocity);
+        //System.out.print(ball.x+" ");
+        //System.out.println(ball.xVelocity);
         
         if(ball.intersects(player1)) {
-            ball.x = 40;
+            //ball.x = 165;
             ball.setXDirection(-ball.xVelocity);
-            System.out.println("INTERSECTION w/ P1");
+            //System.out.println("INTERSECTION w/ P1");
 	}
         else if(ball.intersects(player2)) {
-            ball.x = 520;
+            //ball.x = 520;
             ball.setXDirection(-ball.xVelocity);
-            System.out.println("INTERSECTION w/ P2");
+            //System.out.println("INTERSECTION w/ P2");
 	}
         
         // Checks for point scored
         if (ball.x < 0) {
             ball.x = 0;
             ball.setXDirection(-ball.xVelocity);
-            System.out.println(ball.xVelocity);
+            //System.out.println(ball.xVelocity);
 	}
         else if(ball.x > 570) {
             ball.x = 570;
             ball.setXDirection(-ball.xVelocity);
-            System.out.println(ball.xVelocity);
+            //System.out.println(ball.xVelocity);
 	}
         
         // Checks for collision with top and bottom
@@ -190,16 +190,19 @@ public class GameGUI  {
         public void run(){
             while(true){
                 if(player2 != null){
-                    Integer value;
+                    //Integer value;
                     try{
-                        while((value = dataIn.nextInt()) instanceof Integer){
-                            System.out.println(value);
-                           
-                            if(JavaProjectClient.playerID == 2){
+                        String message;
+                        while((message = dataIn.nextLine()) instanceof String){
+                            if(message.equals("Here is paddle info")){
+                                int value = dataIn.nextInt();
+                                //System.out.println("Im here with this info: " +  value);
+                                player2.setY(value);
+                            }
+                            else if(message.equals("Here is ball info")){
                                 ball.x = dataIn.nextInt();
                                 ball.y = dataIn.nextInt();
-                            }   
-                            player2.setY(value);
+                            }
                         }
                     }catch(Exception e){}
 
