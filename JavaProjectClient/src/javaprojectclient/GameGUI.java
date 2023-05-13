@@ -4,18 +4,11 @@
  */
 package javaprojectclient;
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.*;
+import java.awt.event.*;
 import java.io.PrintWriter;
 import java.util.Scanner;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.Timer;
+import javax.swing.*;
 
 /**
  *
@@ -34,6 +27,19 @@ public class GameGUI  {
     private WriteToServer wtsRunnable;
     
     GameGUI(){
+//        startScreen();  
+        gameScreen();
+    }
+    
+    private void startScreen() {
+        JFrame jf = new JFrame("Start Game!");
+        jf.setSize(600,400);
+        JLabel label = new JLabel("Press Space to Start Game!");
+        jf.add(label);
+        jf.setVisible(true);
+    }
+    
+    private void gameScreen() {
         jf.setSize(600,550);
         rfsRunnable = new ReadFromServer(JavaProjectClient.sin);
         wtsRunnable = new WriteToServer(JavaProjectClient.sout);
@@ -57,12 +63,12 @@ public class GameGUI  {
     
     private void createPaddles(){
         if(JavaProjectClient.playerID == 1){
-            player1 = new Paddle(15,0,25,100,Color.BLUE);
-            player2 = new Paddle(550,0,25,100,Color.RED);
+            player1 = new Paddle(15,225,25,100,Color.BLUE);
+            player2 = new Paddle(550,225,25,100,Color.RED);
         }
         else{
-            player2 = new Paddle(15,0,25,100,Color.BLUE);
-            player1 = new Paddle(550,0,25,100,Color.RED);
+            player2 = new Paddle(15,225,25,100,Color.BLUE);
+            player1 = new Paddle(550,225,25,100,Color.RED);
         }
     }
     
@@ -77,6 +83,7 @@ public class GameGUI  {
     }
     
     private void animationSetUp(){
+        // Everytime Timer ticks the action is Performed
         ActionListener al = new ActionListener(){
             public void actionPerformed(ActionEvent a){
                 int speed = 3;
@@ -93,13 +100,12 @@ public class GameGUI  {
                     }
                     player1.moveV(-speed);
                 }
-                ball.setXDirection(speed);
+                
                 ball.move();
-                //checkCollision();
+                checkCollision();
                 dc.repaint();
             }
         };
-        
         t = new Timer(5, al);
         t.start();
     }
@@ -136,12 +142,42 @@ public class GameGUI  {
     }
     
     public void checkCollision(){
-        if(ball.y <= 0){
+        System.out.print(ball.x+" ");
+        System.out.println(ball.xVelocity);
+        
+        if(ball.intersects(player1)) {
+            ball.x = 40;
+            ball.setXDirection(-ball.xVelocity);
+            System.out.println("INTERSECTION w/ P1");
+	}
+        else if(ball.intersects(player2)) {
+            ball.x = 520;
+            ball.setXDirection(-ball.xVelocity);
+            System.out.println("INTERSECTION w/ P2");
+	}
+        
+        // Checks for point scored
+        if (ball.x < 0) {
+            ball.x = 0;
+            ball.setXDirection(-ball.xVelocity);
+            System.out.println(ball.xVelocity);
+	}
+        else if(ball.x > 570) {
+            ball.x = 570;
+            ball.setXDirection(-ball.xVelocity);
+            System.out.println(ball.xVelocity);
+	}
+        
+        // Checks for collision with top and bottom
+        if(ball.y < 0){
+            ball.y = 0;
             ball.setYDirection(-ball.yVelocity);
         }
-        if(ball.y >= 400) {
+        else if(ball.y > 500) {
+            ball.y = 500;
             ball.setYDirection(-ball.yVelocity);
 	}
+        
     }
     
     class ReadFromServer implements Runnable {
@@ -154,11 +190,13 @@ public class GameGUI  {
         public void run(){
             while(true){
                 if(player2 != null){
-                    Double value;
+                    Integer value;
                     try{
-                        while((value = dataIn.nextDouble()) instanceof Double){
-                            System.out.println(value);
+                        while((value = dataIn.nextInt()) instanceof Integer){
+//                            System.out.println(value);
                             player2.setY(value);
+                            ball.x = dataIn.nextInt();
+                            ball.y = dataIn.nextInt();
                         }
                     }catch(Exception e){}
 
@@ -180,11 +218,13 @@ public class GameGUI  {
                 while(true){
                     if(player1 != null){
                         dataOut.println(player1.getY());
+                        dataOut.println(ball.x);
+                        dataOut.println(ball.y);
                     }
                     try{
                         Thread.sleep(25);
                     }catch(InterruptedException e){
-                        System.out.println(e);
+//                        System.out.println(e);
                     }
                 }
             }catch(Exception ex){

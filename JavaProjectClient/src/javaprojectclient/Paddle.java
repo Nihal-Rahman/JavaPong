@@ -13,29 +13,29 @@ import java.awt.geom.Rectangle2D;
  *
  * @author hossa
  */
-public class Paddle {
-    private double x,y,wsize,hsize;
+public class Paddle extends Rectangle{
+    private int x,y,width,height;
     private Color color;
     
-    Paddle(double a, double b, double w, double h, Color c){
+    Paddle(int a, int b, int w, int h, Color c){
+        super(a, b, w, h);
         x= a;
         y = b;
-        wsize = w;
-        hsize = h;
+        width = w;
+        height = h;
         color = c;
     }
     
     public void drawSprite(Graphics2D g2d){
-        Rectangle2D.Double square = new Rectangle.Double(x, y, wsize, hsize);
         g2d.setColor(color);
-        g2d.fill(square);
+        g2d.fillRect(x, y, width, height);
     }
     
-    public void moveV(double n){
+    public void moveV(int n){
         y+=n;
     }
     
-    public void setY(double n){
+    public void setY(int n){
         y = n;
     }
     

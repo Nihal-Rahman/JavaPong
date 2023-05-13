@@ -64,13 +64,13 @@ class LoginInterface{
     }
 }
 
-
 class ButtonPressed implements ActionListener{
     @Override
     public void actionPerformed(ActionEvent e){  
         String username = LoginInterface.user.getText();
         String server = LoginInterface.server.getText();
-
+        server = "localhost";
+        
         if(server != null){
             try{
                 JavaProjectClient.sock = new Socket(server,5190);
