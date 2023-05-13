@@ -39,7 +39,7 @@ public class Paddle extends Rectangle{
         y = n;
     }
     
-    public double getY(){
+    public int getYValue(){
         return y;
     }
 }

@@ -193,10 +193,13 @@ public class GameGUI  {
                     Integer value;
                     try{
                         while((value = dataIn.nextInt()) instanceof Integer){
-//                            System.out.println(value);
+                            System.out.println(value);
+                           
+                            if(JavaProjectClient.playerID == 2){
+                                ball.x = dataIn.nextInt();
+                                ball.y = dataIn.nextInt();
+                            }   
                             player2.setY(value);
-                            ball.x = dataIn.nextInt();
-                            ball.y = dataIn.nextInt();
                         }
                     }catch(Exception e){}
 
@@ -217,9 +220,11 @@ public class GameGUI  {
             try{
                 while(true){
                     if(player1 != null){
-                        dataOut.println(player1.getY());
-                        dataOut.println(ball.x);
-                        dataOut.println(ball.y);
+                        dataOut.println(player1.getYValue());
+                        if(JavaProjectClient.playerID == 1){
+                            dataOut.println(ball.x);
+                            dataOut.println(ball.y);
+                        }
                     }
                     try{
                         Thread.sleep(25);
