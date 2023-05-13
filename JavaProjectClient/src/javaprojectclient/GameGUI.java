@@ -95,6 +95,7 @@ public class GameGUI  {
                 }
                 ball.setXDirection(speed);
                 ball.move();
+                //checkCollision();
                 dc.repaint();
             }
         };
@@ -134,6 +135,15 @@ public class GameGUI  {
         jf.setFocusable(true);
     }
     
+    public void checkCollision(){
+        if(ball.y <= 0){
+            ball.setYDirection(-ball.yVelocity);
+        }
+        if(ball.y >= 400) {
+            ball.setYDirection(-ball.yVelocity);
+	}
+    }
+    
     class ReadFromServer implements Runnable {
         private Scanner dataIn;
         
@@ -144,10 +154,11 @@ public class GameGUI  {
         public void run(){
             while(true){
                 if(player2 != null){
-                    String value;
+                    Double value;
                     try{
-                        while(((value = dataIn.nextLine()) != null)|| !(value = dataIn.nextLine()).isEmpty()){
-                            player2.setY(Double.parseDouble(value));
+                        while((value = dataIn.nextDouble()) instanceof Double){
+                            System.out.println(value);
+                            player2.setY(value);
                         }
                     }catch(Exception e){}
 

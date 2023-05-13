@@ -8,11 +8,12 @@ import java.io.*;
 import java.net.*;
 import java.sql.*;
 import java.util.*;
+import java.time.LocalDateTime;
 
 public class JavaProjectServer{
     private static final String URL = "jdbc:mariadb://localhost:3306/JPong";
     private static final String USERNAME = "root";
-    private static final String PASSWORD = "1234";
+    private static final String PASSWORD = "nihal1234";
     private static final int PORT = 5190;
     private int numPlayers = 0;
     private int maxPlayers = 2;
@@ -24,7 +25,8 @@ public class JavaProjectServer{
     private WriteToClient p2WriteRunnable;
     private Socket p1Socket;
     private Socket p2Socket;
-    private String p1y, p2y;
+    private String p1y = String.valueOf(0.0);
+    private String p2y = String.valueOf(0.0);
     
     
     static Map<String, Socket> clients = new HashMap<>();
@@ -134,6 +136,7 @@ public class JavaProjectServer{
         return data;
     }
     
+    
     private static void broadcast(String message) {
         for (Socket client : JavaProjectServer.clients.values()) {
             try {
@@ -159,11 +162,10 @@ public class JavaProjectServer{
                 while(true){
                     if(playerID==1){
                         p1y = dataIn.nextLine();
-                        //System.out.println("P1: " + p1y);
                     }
                     else{
                         p2y = dataIn.nextLine();
-                        //System.out.println("P2: " + p2y);
+
                     }
                 }
             }
@@ -184,12 +186,13 @@ public class JavaProjectServer{
             try{
                 while(true){
                     if(playerID==1){
-                        //System.out.println("Im writing this to P1 from P2: "+ p2y);
-                        dataOut.println(p2y);
+                        System.out.println(p2y);
+                        dataOut.println(Double.parseDouble(p2y));
+                        //dataOut.println(p2y);
                     }
                     else{
-                        //System.out.println("Im writing this to P2 from P1 : "+ p1y);
-                        dataOut.println(p1y);
+                        //dataOut.println(p1y);
+                        dataOut.println(Double.parseDouble(p1y));
                     }
                     try{
                         Thread.sleep(25);
