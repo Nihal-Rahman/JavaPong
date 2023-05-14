@@ -8,112 +8,163 @@ import java.io.*;
 import java.net.*;
 import java.sql.*;
 import java.util.*;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+
+/**
+ *
+ * @author Nihal Rahman and Rakeeb Hossain
+ */
 
 public class JavaProjectServer{
     private static final String URL = "jdbc:mariadb://localhost:3306/JPong";
     private static final String USERNAME = "root";
-    private static final String PASSWORD = "nihal1234";
+    private static final String PASSWORD = "1234";
     private static final int PORT = 5190;
-    static int numConnects = 0;
+    private ServerSocket server;
+    private static Connection conn = null;
+    private ReadFromClient p1ReadRunnable;
+    private ReadFromClient p2ReadRunnable;
+    private WriteToClient p1WriteRunnable;
+    private WriteToClient p2WriteRunnable;
+    private static Socket p1Socket;
+    private static Socket p2Socket;
+    private int p1y = 0;
+    private int p2y = 0;
+    private int ballx = 300;
+    private int bally = 225;
     
     static Map<String, Socket> clients = new HashMap<>();
     
-    public static void main(String[] args) {
-
-        Connection conn = null;
+    // Sets up DB & Server Connection
+    JavaProjectServer(){
         try{
             conn = DriverManager.getConnection(URL,USERNAME,PASSWORD);
             System.out.println("Connected to the database");
         } catch(SQLException e){
             System.out.println("Caught exception: "+e.toString());
         }
+
         try {
-            ServerSocket server = new ServerSocket(PORT);
-            while (true){
-                Socket client = server.accept(); //Blocking system call
-                System.out.println("Got a connection from: "+client.getInetAddress());
-                new ProcessConnection(client,conn).start();
-            }
+            server = new ServerSocket(PORT);
                 
         } catch (IOException ex) {
             System.out.println("Unable to bind to port "+PORT);
         }
+        
+        
     }
-}
-class ProcessConnection extends Thread{
-    Socket client;
-    Connection conn;
-    ProcessConnection(Socket newClient, Connection newConn){
-        client = newClient;
-        conn = newConn;
+    
+    public static void main(String[] args) {
+        JavaProjectServer js = new JavaProjectServer();
+        js.acceptConnections();
     }
-    @Override
-    public void run(){
+    
+    // Accepts 2 Connections
+    // Get user's and leaderboard data from DB
+    // Sends data to clients
+    // Sets up Client Sockets and Runnables
+    public void acceptConnections(){
+        int numPlayers = 0;
+        int maxPlayers = 2;
         try{
-            Scanner sin = new Scanner(client.getInputStream());
-            PrintStream sout = new PrintStream(client.getOutputStream());
-            String username = sin.nextLine();
-            
-            String[] userData = obtainUser(conn, username);
-            
-            JavaProjectServer.numConnects += 1;
-            System.out.println(JavaProjectServer.numConnects);
-            
-            sout.println(userData[0]);
-            sout.println(userData[1]);
-            sout.println(userData[2]);
-            sout.println(JavaProjectServer.numConnects);
-            
-            if(JavaProjectServer.numConnects == 2){
-                broadcast("Ready");
+            while(numPlayers < maxPlayers){
+                Socket s = server.accept();
+                numPlayers++;
+                
+                JavaProjectServer.clients.put(String.valueOf(numPlayers), s);
+                
+                Scanner sin = new Scanner(s.getInputStream());
+                PrintStream sout = new PrintStream(s.getOutputStream());
+                
+                // Gets User & Leaderboard Data
+                String username = sin.nextLine();
+                String[] userData = obtainUser(conn, username);
+                ArrayList<String[]> leaderBoardData = getLeaderboard(conn);
+                // Sends User & Leaderboard Data to Cleint
+                sout.println(leaderBoardData.size());
+                sout.println(userData[0]);
+                sout.println(userData[1]);
+                sout.println(userData[2]);
+                sout.println(numPlayers);
+               
+                for (String[] data: leaderBoardData) {
+                    sout.println(data[0]);
+                    sout.println(data[1]);
+                    sout.println(data[2]);
+                }
+                
+                ReadFromClient rfc = new ReadFromClient(numPlayers, sin);
+                WriteToClient wtc = new WriteToClient(numPlayers, sout);
+                
+                if(numPlayers == 1){
+                    p1Socket = s;
+                    p1ReadRunnable = rfc;
+                    p1WriteRunnable = wtc;
+                }
+                else{
+                    p2Socket = s;
+                    p2ReadRunnable = rfc;
+                    p2WriteRunnable = wtc;
+                    // 2 Players connected. Ready to start
+                    broadcast("Ready");
+                    
+                    Thread readThread1 = new Thread(p1ReadRunnable);
+                    Thread readThread2 = new Thread(p2ReadRunnable);
+                    
+                    readThread1.start();
+                    readThread2.start();
+                    
+                    Thread writeThread1 = new Thread(p1WriteRunnable);
+                    Thread writeThread2 = new Thread(p2WriteRunnable);
+                    
+                    writeThread1.start();
+                    writeThread2.start();
+                }
             }
-            /*
-            client.close();
-            sin.close();
-            sout.close();
-            */
-        }catch(Exception e){
-            System.out.println(client.getInetAddress()+" disconnected");
+        } catch(Exception ex){
+            System.out.println("Connection error");
         }
     }
     
-    private String[] obtainUser(Connection conn, String username) throws SQLException {
+    private static String[] obtainUser(Connection conn, String username) throws SQLException {
         int win = 0;
         int loss = 0;
+        String[] data = {username, String.valueOf(0), String.valueOf(0)};
         PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Leaderboard WHERE username=?");
         stmt.setString(1, username);
         ResultSet rs = stmt.executeQuery();
         boolean isThere = rs.next();
         if(!isThere){
-           stmt = conn.prepareStatement("INSERT INTO Leaderboard (username) VALUES (?)");
+           stmt = conn.prepareStatement("INSERT INTO Leaderboard (username) VALUES (?);");
            stmt.setString(1, username);
-           rs = stmt.executeQuery();
-           isThere = rs.next();
-           win = rs.getInt("numWins");
-           loss = rs.getInt("numLoss");
+           stmt.setString(2, username);
+           rs = stmt.executeQuery();      
         }
         else{
             win = rs.getInt("numWins");
             loss = rs.getInt("numLoss");
+            data[1] = String.valueOf(win);
+            data[2] = String.valueOf(loss);
         }
         
         stmt.close();
         rs.close();
-        String[] data = {username, String.valueOf(win), String.valueOf(loss)};
         
-        JavaProjectServer.clients.put(username, client);
         return data;
     }
     
-    
-    private void logConnection(String username, String ipAddress, Connection conn) throws SQLException {
-        PreparedStatement stmt = conn.prepareStatement("INSERT INTO LOGINS (username, ip_address, time) VALUES (?, ?, ?)");
-        stmt.setString(1, username);
-        stmt.setString(2, ipAddress);
-        stmt.setString(3, LocalDateTime.now().toString());
-        stmt.executeUpdate();
-        stmt.close();
+    private static ArrayList<String[]> getLeaderboard (Connection conn) throws SQLException{
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Leaderboard");
+        ResultSet rs = stmt.executeQuery();
+        ArrayList<String[]> leaderboard = new ArrayList<String[]>(); 
+        while (rs.next()) {
+            String[] data = {"","",""};
+            data[0]= rs.getString("userName");
+            data[1]= String.valueOf(rs.getInt("numWins"));
+            data[2]= String.valueOf(rs.getInt("numLoss")); 
+            leaderboard.add(data);
+        }
+        return leaderboard;
     }
     
     private static void broadcast(String message) {
@@ -124,6 +175,69 @@ class ProcessConnection extends Thread{
             } catch (IOException e) {
                  System.out.println("Unable to broadcast message");
             }
+        }
+    }
+    // Reads Paddle Positions from both clients
+    // Reads Ball position from client 1
+    private class ReadFromClient implements Runnable{
+        private int playerID;
+        private Scanner dataIn;
+        
+        public ReadFromClient(int pid, Scanner in){
+            playerID = pid;
+            dataIn = in;
+        }
+        
+        public void run(){
+            try{
+                while(true){
+                    if(playerID==1){
+                        p1y = dataIn.nextInt();
+                        ballx = dataIn.nextInt();
+                        bally = dataIn.nextInt();
+                    }
+                    else{
+                        p2y = dataIn.nextInt();
+
+                    }
+                }
+            }
+            catch(Exception ie){}
+        }
+    }
+    // Writes Paddle positions to the other client
+    // Writes ball position to client 2
+    private class WriteToClient implements Runnable{
+        private int playerID;
+        private PrintStream dataOut;
+        
+        public WriteToClient(int pid, PrintStream out){
+            playerID = pid;
+            dataOut = out;
+        }
+        
+        public void run(){
+            try{
+                while(true){
+                    if(playerID==1){
+                        dataOut.println("Here is paddle info");
+                        dataOut.println(p2y);
+                    }
+                    else{
+                        dataOut.println("Here is paddle info");
+                        dataOut.println(p1y);
+                        dataOut.println("Here is ball info");
+                        dataOut.println(ballx);
+                        dataOut.println(bally);
+                    }
+                    try{
+                        Thread.sleep(25);
+                    }catch(InterruptedException e){
+                        System.out.println(e);
+                    }
+                }
+            }
+            catch(Exception ie){}
         }
     }
 }

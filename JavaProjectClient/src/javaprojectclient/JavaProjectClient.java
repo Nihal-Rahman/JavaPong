@@ -9,49 +9,26 @@ import java.awt.event.*;
 import java.net.*;
 import javax.swing.*;
 import java.util.*;
+
 /**
  *
- * @author nihalrahman
+ * @author Nihal Rahman and Rakeeb Hossain
  */
-public class JavaProjectClient implements Runnable{
 
+public class JavaProjectClient{
     static Socket sock;
     static Scanner sin;
     static PrintWriter sout;
     static Thread t = new Thread();
     static WaitingRoom wr;
-    
+    static int playerID;
+    static String userName;
+    static ArrayList<String[]> leaderBoardData = new ArrayList<>();
     
     public static void main(String[] args) {
-        JavaProjectClient client = new JavaProjectClient();
-        client.run();
-    }
-    
-    
-    @Override
-    public void run(){ 
         new LoginInterface();
     }
-    
 }
-
-
-class checkReady implements Runnable{
-    @Override
-    public void run(){
-        String messages;
-        try{
-            while(JavaProjectClient.sin.hasNext()){
-                if(JavaProjectClient.sin.nextLine().equals("Ready")){
-                    JavaProjectClient.t.interrupt();
-                    JavaProjectClient.wr.jf.setVisible(false);
-                    new GameGUI();
-                }
-            }
-        } catch(Exception e){}
-    }
-}
-
 
 class LoginInterface{
     static JFrame jf = new JFrame();
@@ -81,14 +58,15 @@ class LoginInterface{
         
     }
 }
-
-
+// Submit Button for Login
+// Reads in Users Win/Loss data from DB & Leaderboard data
+// Starts waiting room
 class ButtonPressed implements ActionListener{
     @Override
     public void actionPerformed(ActionEvent e){  
         String username = LoginInterface.user.getText();
         String server = LoginInterface.server.getText();
-
+        // Checks for Server
         if(server != null){
             try{
                 JavaProjectClient.sock = new Socket(server,5190);
@@ -106,16 +84,30 @@ class ButtonPressed implements ActionListener{
         String loss = "";
         int counter = 0;
         try{
+            int max = JavaProjectClient.sin.nextInt();
+            JavaProjectClient.sin.nextLine();
             while(JavaProjectClient.sin.hasNext()){
                 if(counter == 0){
                    user = JavaProjectClient.sin.nextLine();
                 }
-                if(counter == 1){
+                else if(counter == 1){
                    wins = JavaProjectClient.sin.nextLine();
                 }
-                if(counter == 2){
+                else if(counter == 2){
                    loss = JavaProjectClient.sin.nextLine();
-                   break;
+                }
+                else if(counter == 3){
+                    JavaProjectClient.playerID = Integer.parseInt(JavaProjectClient.sin.nextLine());
+                }
+                else if (counter>3 && counter<4+max){
+                    String user1 = JavaProjectClient.sin.nextLine();
+                    String wins1 = JavaProjectClient.sin.nextLine();
+                    String loss1 = JavaProjectClient.sin.nextLine();
+                    String[] data = {user1,wins1,loss1};
+                    JavaProjectClient.leaderBoardData.add(data);
+                    if (counter==max+3) {
+                        break;
+                    } 
                 }
                 counter += 1;
             }
@@ -132,11 +124,12 @@ class ButtonPressed implements ActionListener{
     }
 }
 
+// Waiting room GUI for Client 1, while no client 2
 class WaitingRoom{
-    
     static JFrame jf = new JFrame("Waiting Room");
     
     WaitingRoom(String username, String numWins, String numLoss){
+        JavaProjectClient.userName = username;
         JPanel jp = new JPanel();
         jp.setLayout(new GridLayout(4, 1, 4,4));
         JLabel message = new JLabel("Waiting for another user to connect...");
@@ -152,15 +145,24 @@ class WaitingRoom{
         jf.add(jp);
         jf.setSize(500,500);
         jf.setVisible(true);
-        
+    }       
+}
+// Checks for "ready" broadcast and closes waitingroom
+class checkReady implements Runnable{
+    @Override
+    public void run(){
+        String messages;
+        try{
+            while(JavaProjectClient.sin.hasNext()){
+                if(JavaProjectClient.sin.nextLine().equals("Ready")){
+                    JavaProjectClient.t.interrupt();
+                    JavaProjectClient.wr.jf.setVisible(false);
+                    
+                    new GameGUI();
+                }
+            }
+        } catch(Exception e){}
     }
-        
 }
 
-class GameGUI{
-    GameGUI(){
-        JFrame jf = new JFrame("Game On!");
-        jf.setSize(500,500);
-        jf.setVisible(true);
-    }
-}
+
