@@ -13,18 +13,18 @@ import java.time.LocalDateTime;
 public class JavaProjectServer{
     private static final String URL = "jdbc:mariadb://localhost:3306/JPong";
     private static final String USERNAME = "root";
-    private static final String PASSWORD = "nihal1234";
+    private static final String PASSWORD = "1234";
     private static final int PORT = 5190;
     private int numPlayers = 0;
     private int maxPlayers = 2;
     private ServerSocket server;
-    private Connection conn = null;
+    private static Connection conn = null;
     private ReadFromClient p1ReadRunnable;
     private ReadFromClient p2ReadRunnable;
     private WriteToClient p1WriteRunnable;
     private WriteToClient p2WriteRunnable;
-    private Socket p1Socket;
-    private Socket p2Socket;
+    private static Socket p1Socket;
+    private static Socket p2Socket;
     private int p1y = 0;
     private int p2y = 0;
     private int ballx = 300;
@@ -102,6 +102,9 @@ public class JavaProjectServer{
                     writeThread1.start();
                     writeThread2.start();
                     
+                    checkWinner theCheck = new checkWinner(conn);
+                    Thread check = new Thread(theCheck);
+                    check.start();
                 }
             }
         } catch(Exception ex){
@@ -110,7 +113,50 @@ public class JavaProjectServer{
     }
     
     
-    private String[] obtainUser(Connection conn, String username) throws SQLException {
+    static class checkWinner implements Runnable{
+        
+        Connection db;
+        checkWinner(Connection conn){
+            db = conn;
+        }
+        
+        @Override
+        public void run() {
+            String userName;
+            while (true) {
+                try{
+                    Scanner p1Reader = new Scanner(p1Socket.getInputStream());
+                    Scanner p2Reader = new Scanner(p2Socket.getInputStream());
+                    if(p1Reader.nextLine().equals("Winner")){
+                        userName = p1Reader.nextLine();
+                        break;
+                    }
+                    if(p2Reader.nextLine().equals("Winner")){
+                         userName = p1Reader.nextLine();
+                         break;
+                    }
+                }catch(Exception e){}
+            }
+            try {
+                String[] userData = obtainUser(conn, userName);
+                PreparedStatement stmt2 = conn.prepareStatement("UPDATE Leaderboard SET numWins=? WHERE userName=?");
+                int wins = Integer.parseInt(userData[1])+1;
+                stmt2.setString(1, String.valueOf(wins));
+                stmt2.setString(2, userName);
+                stmt2.executeQuery();
+                stmt2 = conn.prepareStatement("SELECT * FROM Leaderboard");
+                ResultSet rs = stmt2.executeQuery();
+                while(rs.next()) {
+                    System.out.println(rs.getString("userName"));
+                    System.out.println(rs.getInt("numWins"));
+                }
+            } catch (Exception ex) {}
+
+        }
+    
+    }
+   
+    private static String[] obtainUser(Connection conn, String username) throws SQLException {
         int win = 0;
         int loss = 0;
         String[] data = {username, String.valueOf(0), String.valueOf(0)};

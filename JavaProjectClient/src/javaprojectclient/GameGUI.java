@@ -15,16 +15,18 @@ import javax.swing.*;
  * @author hossa
  */
 public class GameGUI  {
-    static JFrame jf = new JFrame("Player: " + JavaProjectClient.playerID);
+    private static JFrame jf = new JFrame("Player: " + JavaProjectClient.playerID);
     private Paddle player1;
     private Paddle player2;
     private Ball ball;
+    private Score score;
     private DrawingComponent dc;
     private Timer t;
     private boolean down = false;
     private boolean up = false;
     private ReadFromServer rfsRunnable;
     private WriteToServer wtsRunnable;
+    static boolean won = false;
     
     GameGUI(){
 //        startScreen();  
@@ -44,8 +46,8 @@ public class GameGUI  {
         rfsRunnable = new ReadFromServer(JavaProjectClient.sin);
         wtsRunnable = new WriteToServer(JavaProjectClient.sout);
         createPaddles();
-        ball = new Ball(300,225,30,30); 
-
+        createBall();
+        score = new Score();
         dc = new DrawingComponent();
         jf.add(dc);
         jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -72,6 +74,10 @@ public class GameGUI  {
         }
     }
     
+    private void createBall() {
+        ball = new Ball(285,210,30,30); 
+    }
+    
     
     private class DrawingComponent extends JComponent{
         protected void paintComponent(Graphics g){
@@ -79,6 +85,7 @@ public class GameGUI  {
             player1.drawSprite(g2d);
             player2.drawSprite(g2d);
             ball.draw(g2d);
+            score.draw(g2d);
         }
     }
     
@@ -88,14 +95,14 @@ public class GameGUI  {
             public void actionPerformed(ActionEvent a){
                 int speed = 3;
                 if(down){
-                    if(player1.getY() > 400){
+                    if(player1.getYValue() > 400){
                         speed = 0;
                     }
                     player1.moveV(speed);
                     
                 }
                 if(up){
-                    if(player1.getY() < 0){
+                    if(player1.getYValue() < 0){
                         speed = 0;
                     }
                     player1.moveV(-speed);
@@ -141,31 +148,30 @@ public class GameGUI  {
         jf.setFocusable(true);
     }
     
-    public void checkCollision(){
-        //System.out.print(ball.x+" ");
-        //System.out.println(ball.xVelocity);
-        
+    public void checkCollision(){        
         if(ball.intersects(player1)) {
-            //ball.x = 165;
+            ball.x = 65;
             ball.setXDirection(-ball.xVelocity);
             //System.out.println("INTERSECTION w/ P1");
 	}
         else if(ball.intersects(player2)) {
-            //ball.x = 520;
+            ball.x = 520;
             ball.setXDirection(-ball.xVelocity);
             //System.out.println("INTERSECTION w/ P2");
 	}
         
         // Checks for point scored
         if (ball.x < 0) {
-            ball.x = 0;
+            createBall();
+            createPaddles();
+            score.player2++;
             ball.setXDirection(-ball.xVelocity);
-            //System.out.println(ball.xVelocity);
 	}
         else if(ball.x > 570) {
-            ball.x = 570;
+            createBall();
+            createPaddles();
+            score.player1++;
             ball.setXDirection(-ball.xVelocity);
-            //System.out.println(ball.xVelocity);
 	}
         
         // Checks for collision with top and bottom
@@ -177,7 +183,21 @@ public class GameGUI  {
             ball.y = 500;
             ball.setYDirection(-ball.yVelocity);
 	}
-        
+//         Checks for win
+        if (score.player1>10 || score.player2>10) {
+            if(score.player1 > 10 && JavaProjectClient.playerID == 1){
+                won = true;
+                JavaProjectClient.sout.println("Winner");
+                JavaProjectClient.sout.println(JavaProjectClient.userName);
+            }
+            else if(score.player2 > 10 && JavaProjectClient.playerID == 2){
+                won = true;
+                JavaProjectClient.sout.println("Winner");
+                JavaProjectClient.sout.println(JavaProjectClient.userName);
+            }
+            jf.setVisible(false);
+            
+        } 
     }
     
     class ReadFromServer implements Runnable {
@@ -196,18 +216,16 @@ public class GameGUI  {
                         while((message = dataIn.nextLine()) instanceof String){
                             if(message.equals("Here is paddle info")){
                                 int value = dataIn.nextInt();
-                                //System.out.println("Im here with this info: " +  value);
                                 player2.setY(value);
                             }
                             else if(message.equals("Here is ball info")){
                                 ball.x = dataIn.nextInt();
                                 ball.y = dataIn.nextInt();
+                                dc.repaint();
                             }
                         }
                     }catch(Exception e){}
-
                 }
-
             }
         }
     }
@@ -240,5 +258,32 @@ public class GameGUI  {
             }
         }
     }
-    
+}
+
+class EndScreen {
+    EndScreen() {
+        JFrame jf = new JFrame("Game Over");
+        JPanel jp = new JPanel();
+        jp.setLayout(new GridLayout(2, 1, 4,4));
+        JLabel winner = new JLabel();
+        if(GameGUI.won){
+            winner.setText("You Won!");
+        }
+        else{
+            winner.setText("You Lost!");
+        }
+        jp.add(winner);
+        TextArea leaderboard = new TextArea();
+        leaderboard.append("Here's the updated leaderboard:" +"\n");
+        while(JavaProjectClient.sin.hasNext()){
+            leaderboard.append(JavaProjectClient.sin.nextLine() + "\n");
+        }
+        jp.add(leaderboard);
+        
+        jf.setSize(1000,1000);
+        jf.add(jp);
+        
+        jf.setVisible(true);
+
+    }
 }

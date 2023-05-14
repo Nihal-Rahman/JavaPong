@@ -27,6 +27,7 @@ public class JavaProjectClient{
     static Thread t = new Thread();
     static WaitingRoom wr;
     static int playerID;
+    static String userName;
     
     
     public static void main(String[] args) {
@@ -122,6 +123,7 @@ class WaitingRoom{
     static JFrame jf = new JFrame("Waiting Room");
     
     WaitingRoom(String username, String numWins, String numLoss){
+        JavaProjectClient.userName = username;
         JPanel jp = new JPanel();
         jp.setLayout(new GridLayout(4, 1, 4,4));
         JLabel message = new JLabel("Waiting for another user to connect...");
@@ -137,9 +139,7 @@ class WaitingRoom{
         jf.add(jp);
         jf.setSize(500,500);
         jf.setVisible(true);
-        
-    }
-        
+    }       
 }
 
 class checkReady implements Runnable{
