@@ -16,7 +16,6 @@ import java.util.*;
  */
 
 public class JavaProjectClient{
-
     static Socket sock;
     static Scanner sin;
     static PrintWriter sout;
@@ -29,7 +28,6 @@ public class JavaProjectClient{
     public static void main(String[] args) {
         new LoginInterface();
     }
-    
 }
 
 class LoginInterface{
@@ -60,13 +58,15 @@ class LoginInterface{
         
     }
 }
-
+// Submit Button for Login
+// Reads in Users Win/Loss data from DB & Leaderboard data
+// Starts waiting room
 class ButtonPressed implements ActionListener{
     @Override
     public void actionPerformed(ActionEvent e){  
         String username = LoginInterface.user.getText();
         String server = LoginInterface.server.getText();
-        
+        // Checks for Server
         if(server != null){
             try{
                 JavaProjectClient.sock = new Socket(server,5190);
@@ -124,8 +124,8 @@ class ButtonPressed implements ActionListener{
     }
 }
 
+// Waiting room GUI for Client 1, while no client 2
 class WaitingRoom{
-    
     static JFrame jf = new JFrame("Waiting Room");
     
     WaitingRoom(String username, String numWins, String numLoss){
@@ -147,7 +147,7 @@ class WaitingRoom{
         jf.setVisible(true);
     }       
 }
-
+// Checks for "ready" broadcast and closes waitingroom
 class checkReady implements Runnable{
     @Override
     public void run(){

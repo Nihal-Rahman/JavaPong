@@ -18,10 +18,8 @@ import java.util.ArrayList;
 public class JavaProjectServer{
     private static final String URL = "jdbc:mariadb://localhost:3306/JPong";
     private static final String USERNAME = "root";
-    private static final String PASSWORD = "nihal1234";
+    private static final String PASSWORD = "1234";
     private static final int PORT = 5190;
-    private int numPlayers = 0;
-    private int maxPlayers = 2;
     private ServerSocket server;
     private static Connection conn = null;
     private ReadFromClient p1ReadRunnable;
@@ -37,6 +35,7 @@ public class JavaProjectServer{
     
     static Map<String, Socket> clients = new HashMap<>();
     
+    // Sets up DB & Server Connection
     JavaProjectServer(){
         try{
             conn = DriverManager.getConnection(URL,USERNAME,PASSWORD);
@@ -60,7 +59,13 @@ public class JavaProjectServer{
         js.acceptConnections();
     }
     
+    // Accepts 2 Connections
+    // Get user's and leaderboard data from DB
+    // Sends data to clients
+    // Sets up Client Sockets and Runnables
     public void acceptConnections(){
+        int numPlayers = 0;
+        int maxPlayers = 2;
         try{
             while(numPlayers < maxPlayers){
                 Socket s = server.accept();
@@ -70,10 +75,12 @@ public class JavaProjectServer{
                 
                 Scanner sin = new Scanner(s.getInputStream());
                 PrintStream sout = new PrintStream(s.getOutputStream());
-                String username = sin.nextLine();
                 
+                // Gets User & Leaderboard Data
+                String username = sin.nextLine();
                 String[] userData = obtainUser(conn, username);
                 ArrayList<String[]> leaderBoardData = getLeaderboard(conn);
+                // Sends User & Leaderboard Data to Cleint
                 sout.println(leaderBoardData.size());
                 sout.println(userData[0]);
                 sout.println(userData[1]);
@@ -98,7 +105,7 @@ public class JavaProjectServer{
                     p2Socket = s;
                     p2ReadRunnable = rfc;
                     p2WriteRunnable = wtc;
-                    
+                    // 2 Players connected. Ready to start
                     broadcast("Ready");
                     
                     Thread readThread1 = new Thread(p1ReadRunnable);
@@ -112,14 +119,13 @@ public class JavaProjectServer{
                     
                     writeThread1.start();
                     writeThread2.start();
-                   
                 }
             }
         } catch(Exception ex){
             System.out.println("Connection error");
         }
     }
-   
+    
     private static String[] obtainUser(Connection conn, String username) throws SQLException {
         int win = 0;
         int loss = 0;
@@ -147,7 +153,6 @@ public class JavaProjectServer{
         return data;
     }
     
-    
     private static ArrayList<String[]> getLeaderboard (Connection conn) throws SQLException{
         PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Leaderboard");
         ResultSet rs = stmt.executeQuery();
@@ -172,7 +177,8 @@ public class JavaProjectServer{
             }
         }
     }
-    
+    // Reads Paddle Positions from both clients
+    // Reads Ball position from client 1
     private class ReadFromClient implements Runnable{
         private int playerID;
         private Scanner dataIn;
@@ -199,7 +205,8 @@ public class JavaProjectServer{
             catch(Exception ie){}
         }
     }
-    
+    // Writes Paddle positions to the other client
+    // Writes ball position to client 2
     private class WriteToClient implements Runnable{
         private int playerID;
         private PrintStream dataOut;

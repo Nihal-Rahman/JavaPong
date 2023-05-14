@@ -14,8 +14,6 @@ import javax.swing.*;
  *
  * @author Nihal Rahman and Rakeeb Hossain
  */
-
-
 public class GameGUI  {
     private static JFrame jf = new JFrame("Player: " + JavaProjectClient.playerID);
     private Paddle player1;
@@ -70,8 +68,7 @@ public class GameGUI  {
     private void createBall() {
         ball = new Ball(285,210,30,30); 
     }
-    
-    
+    // Initial Graphic at Start
     private class DrawingComponent extends JComponent{
         protected void paintComponent(Graphics g){
             Graphics2D g2d = (Graphics2D) g;
@@ -81,7 +78,7 @@ public class GameGUI  {
             score.draw(g2d);
         }
     }
-    
+    // Continuously Animates and Checks for collisions
     private void animationSetUp(){
         // Everytime Timer ticks the action is Performed
         ActionListener al = new ActionListener(){
@@ -110,9 +107,8 @@ public class GameGUI  {
         };
         t = new Timer(5, al);
         t.start();
-        
     }
-    
+    // Reads for key inputs 
     private void keyActions(){
         KeyListener kl = new KeyListener(){
             public void keyTyped(KeyEvent e){}
@@ -145,10 +141,12 @@ public class GameGUI  {
     }
     
     public void checkCollision(){
+        // Collision w/ Paddle 1
         if(((ball.y >= player1.getYValue()) && (ball.y <= player1.getYValue() + 100)) && (ball.x >= 15 && ball.x <= 40)) {
             ball.x = 65;
             ball.setXDirection(-ball.xVelocity);
         }
+        // Collision w/ Paddle 2
         else if(((ball.y >= player2.getYValue()) && (ball.y <= player2.getYValue() + 100)) && (ball.x >= 550 && ball.x <= 575)) {
             ball.x = 520;
             ball.setXDirection(-ball.xVelocity);
@@ -195,6 +193,8 @@ public class GameGUI  {
         } 
     }
     
+    // Clients reads eachother's paddles positions
+    // Client 2 will read in ball position
     class ReadFromServer implements Runnable {
         private Scanner dataIn;
         
@@ -223,7 +223,9 @@ public class GameGUI  {
             }
         }
     }
-
+    
+    // Clients send paddle positions
+    // Client 1 sends ball position
     class WriteToServer implements Runnable {
         private PrintWriter dataOut;
         
@@ -253,10 +255,9 @@ public class GameGUI  {
         }
     }
 }
-
+// EndScreen Displays winner and Leaderboard
 class EndScreen {
-    EndScreen() {
-        
+    EndScreen() { 
         JFrame jf = new JFrame("Game Over");
         JPanel jp = new JPanel();
         jp.setLayout(new GridLayout(2, 1, 4,4));
@@ -279,5 +280,6 @@ class EndScreen {
         jf.add(jp);
         
         jf.setVisible(true);
+        jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 }

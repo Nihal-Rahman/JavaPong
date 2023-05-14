@@ -18,34 +18,33 @@ import java.util.Random;
 public class Ball extends Rectangle {
 
     Random random;
-    int xVelocity = 0 ;
-    int yVelocity = 0 ;
-    int initialSpeed = 2;
+    int xVelocity;
+    int yVelocity;
+    int initialSpeed;
 
     Ball(int x, int y, int width, int height){
         super(x,y,width,height);
         random = new Random();
-        
-        xVelocity = random.nextInt(4);
-        
-        if(xVelocity == 0){
-            xVelocity = 1;
+        // Random starting Ball x Velocity
+        initialSpeed = random.nextInt(3);
+        if(initialSpeed == 0){
+            initialSpeed = 1;
         }
-        
+        // Random starting Ball x direction
 	int randomXDirection = random.nextInt(2);
 	if(randomXDirection == 0)
-	randomXDirection--;
+            randomXDirection--;
 	setXDirection(randomXDirection*initialSpeed);
         
-        yVelocity = random.nextInt(4);
-        
-        if(yVelocity == 0){
-            yVelocity = 1;
+        // Random starting Ball x Velocity
+        initialSpeed = random.nextInt(4);
+        if(initialSpeed == 0){
+            initialSpeed = 1;
         }
-		
+	// Random starting Ball y direction	
 	int randomYDirection = random.nextInt(2);
 	if(randomYDirection == 0)
-	randomYDirection--;
+            randomYDirection--;
 	setYDirection(randomYDirection*initialSpeed);
         
         

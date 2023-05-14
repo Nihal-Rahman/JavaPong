@@ -6,6 +6,11 @@ package javaprojectclient;
 
 import java.awt.*;
 
+/**
+ *
+ * @author Nihal Rahman and Rakeeb Hossain
+ */
+
 public class Score extends Rectangle{
     int player1;
     int player2;

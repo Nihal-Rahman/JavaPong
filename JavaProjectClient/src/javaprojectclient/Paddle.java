@@ -13,7 +13,6 @@ import java.awt.Rectangle;
  * @author Nihal Rahman and Rakeeb Hossain
  */
 
-
 public class Paddle extends Rectangle{
     private int x,y,width,height;
     private Color color;
