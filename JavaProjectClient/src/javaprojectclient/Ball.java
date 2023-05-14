@@ -11,17 +11,44 @@ import java.util.Random;
 
 /**
  *
- * @author hossa
+ * @author Nihal Rahman and Rakeeb Hossain
  */
+
+
 public class Ball extends Rectangle {
 
     Random random;
-    int xVelocity=1;
-    int yVelocity=1;
+    int xVelocity = 0 ;
+    int yVelocity = 0 ;
     int initialSpeed = 2;
 
     Ball(int x, int y, int width, int height){
         super(x,y,width,height);
+        random = new Random();
+        
+        xVelocity = random.nextInt(4);
+        
+        if(xVelocity == 0){
+            xVelocity = 1;
+        }
+        
+	int randomXDirection = random.nextInt(2);
+	if(randomXDirection == 0)
+	randomXDirection--;
+	setXDirection(randomXDirection*initialSpeed);
+        
+        yVelocity = random.nextInt(4);
+        
+        if(yVelocity == 0){
+            yVelocity = 1;
+        }
+		
+	int randomYDirection = random.nextInt(2);
+	if(randomYDirection == 0)
+	randomYDirection--;
+	setYDirection(randomYDirection*initialSpeed);
+        
+        
     }
         
     public void setXDirection(int randomXDirection) {

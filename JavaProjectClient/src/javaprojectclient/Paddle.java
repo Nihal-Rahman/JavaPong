@@ -7,12 +7,13 @@ package javaprojectclient;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
-import java.awt.geom.Rectangle2D;
 
 /**
  *
- * @author hossa
+ * @author Nihal Rahman and Rakeeb Hossain
  */
+
+
 public class Paddle extends Rectangle{
     private int x,y,width,height;
     private Color color;

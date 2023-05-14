@@ -10,10 +10,15 @@ import java.sql.*;
 import java.util.*;
 import java.util.ArrayList;
 
+/**
+ *
+ * @author Nihal Rahman and Rakeeb Hossain
+ */
+
 public class JavaProjectServer{
     private static final String URL = "jdbc:mariadb://localhost:3306/JPong";
     private static final String USERNAME = "root";
-    private static final String PASSWORD = "1234";
+    private static final String PASSWORD = "nihal1234";
     private static final int PORT = 5190;
     private int numPlayers = 0;
     private int maxPlayers = 2;
@@ -76,9 +81,6 @@ public class JavaProjectServer{
                 sout.println(numPlayers);
                
                 for (String[] data: leaderBoardData) {
-                    System.out.println(data[0]);
-                    System.out.println(data[1]);
-                    System.out.println(data[2]);
                     sout.println(data[0]);
                     sout.println(data[1]);
                     sout.println(data[2]);
@@ -157,7 +159,6 @@ public class JavaProjectServer{
             data[2]= String.valueOf(rs.getInt("numLoss")); 
             leaderboard.add(data);
         }
-        System.out.println(leaderboard.size());
         return leaderboard;
     }
     

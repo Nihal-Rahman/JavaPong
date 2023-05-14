@@ -10,15 +10,11 @@ import java.net.*;
 import javax.swing.*;
 import java.util.*;
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.geom.Rectangle2D;
-import javax.swing.Timer;
-
 /**
  *
- * @author nihalrahman
+ * @author Nihal Rahman and Rakeeb Hossain
  */
+
 public class JavaProjectClient{
 
     static Socket sock;
@@ -70,7 +66,6 @@ class ButtonPressed implements ActionListener{
     public void actionPerformed(ActionEvent e){  
         String username = LoginInterface.user.getText();
         String server = LoginInterface.server.getText();
-        server = "localhost";
         
         if(server != null){
             try{
@@ -105,7 +100,6 @@ class ButtonPressed implements ActionListener{
                     JavaProjectClient.playerID = Integer.parseInt(JavaProjectClient.sin.nextLine());
                 }
                 else if (counter>3 && counter<4+max){
-                    System.out.println("hello");
                     String user1 = JavaProjectClient.sin.nextLine();
                     String wins1 = JavaProjectClient.sin.nextLine();
                     String loss1 = JavaProjectClient.sin.nextLine();
@@ -117,7 +111,6 @@ class ButtonPressed implements ActionListener{
                 }
                 counter += 1;
             }
-            System.out.println(JavaProjectClient.leaderBoardData.size());
         } catch(Exception e1){
             System.out.print(e1);
         }

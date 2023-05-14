@@ -6,22 +6,23 @@ package javaprojectclient;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Scanner;
 import javax.swing.*;
 
 /**
  *
- * @author hossa
+ * @author Nihal Rahman and Rakeeb Hossain
  */
+
+
 public class GameGUI  {
     private static JFrame jf = new JFrame("Player: " + JavaProjectClient.playerID);
     private Paddle player1;
     private Paddle player2;
     private Ball ball;
     private Score score;
-    private DrawingComponent dc;
+    static DrawingComponent dc;
     private Timer t;
     private boolean down = false;
     private boolean up = false;
@@ -29,19 +30,10 @@ public class GameGUI  {
     private WriteToServer wtsRunnable;
     static boolean won = false;
     
-    GameGUI(){
-//        startScreen();  
+    GameGUI(){ 
         gameScreen();
     }
-    
-    private void startScreen() {
-        JFrame jf = new JFrame("Start Game!");
-        jf.setSize(600,400);
-        JLabel label = new JLabel("Press Space to Start Game!");
-        jf.add(label);
-        jf.setVisible(true);
-    }
-    
+        
     private void gameScreen() {
         jf.setSize(600,550);
         rfsRunnable = new ReadFromServer(JavaProjectClient.sin);
@@ -54,14 +46,14 @@ public class GameGUI  {
         jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jf.setVisible(true);
         
-        animationSetUp();
-        keyActions();
-        
         Thread readThread = new Thread(rfsRunnable);
         Thread writeThread = new Thread(wtsRunnable);
         
         readThread.start();
         writeThread.start();
+        
+        animationSetUp();
+        keyActions();
     }
     
     private void createPaddles(){
@@ -93,13 +85,14 @@ public class GameGUI  {
     private void animationSetUp(){
         // Everytime Timer ticks the action is Performed
         ActionListener al = new ActionListener(){
-            public void actionPerformed(ActionEvent a){
+            public synchronized void actionPerformed(ActionEvent a){
                 int speed = 3;
                 if(down){
                     if(player1.getYValue() > 400){
                         speed = 0;
                     }
                     player1.moveV(speed);
+                    dc.repaint();
                     
                 }
                 if(up){
@@ -107,6 +100,7 @@ public class GameGUI  {
                         speed = 0;
                     }
                     player1.moveV(-speed);
+                    dc.repaint();
                 }
                 
                 ball.move();
@@ -150,17 +144,15 @@ public class GameGUI  {
         jf.setFocusable(true);
     }
     
-    public void checkCollision(){        
-        if(ball.intersects(player1)) {
+    public void checkCollision(){
+        if(((ball.y >= player1.getYValue()) && (ball.y <= player1.getYValue() + 100)) && (ball.x >= 15 && ball.x <= 40)) {
             ball.x = 65;
             ball.setXDirection(-ball.xVelocity);
-            //System.out.println("INTERSECTION w/ P1");
-	}
-        else if(ball.intersects(player2)) {
+        }
+        else if(((ball.y >= player2.getYValue()) && (ball.y <= player2.getYValue() + 100)) && (ball.x >= 550 && ball.x <= 575)) {
             ball.x = 520;
             ball.setXDirection(-ball.xVelocity);
-            //System.out.println("INTERSECTION w/ P2");
-	}
+        }
         
         // Checks for point scored
         if (ball.x < 0) {
@@ -186,7 +178,7 @@ public class GameGUI  {
             ball.setYDirection(-ball.yVelocity);
 	}
 //         Checks for win
-        if (score.player1>10 || score.player2>10) {
+        if (score.player1 > 10 || score.player2 > 10) {
             if(score.player1 > 10 && JavaProjectClient.playerID == 1){
                 won = true;
                 JavaProjectClient.sout.println("Winner");
@@ -213,7 +205,6 @@ public class GameGUI  {
         public void run(){
             while(true){
                 if(player2 != null){
-                    //Integer value;
                     try{
                         String message;
                         while((message = dataIn.nextLine()) instanceof String){
@@ -253,7 +244,7 @@ public class GameGUI  {
                     try{
                         Thread.sleep(25);
                     }catch(InterruptedException e){
-//                        System.out.println(e);
+                        System.out.println(e);
                     }
                 }
             }catch(Exception ex){
