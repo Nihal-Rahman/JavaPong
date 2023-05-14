@@ -6,6 +6,7 @@ package javaprojectclient;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Scanner;
 import javax.swing.*;
@@ -115,6 +116,7 @@ public class GameGUI  {
         };
         t = new Timer(5, al);
         t.start();
+        
     }
     
     private void keyActions(){
@@ -196,7 +198,8 @@ public class GameGUI  {
                 JavaProjectClient.sout.println(JavaProjectClient.userName);
             }
             jf.setVisible(false);
-            
+            t.stop();
+            new EndScreen();
         } 
     }
     
@@ -262,6 +265,7 @@ public class GameGUI  {
 
 class EndScreen {
     EndScreen() {
+        
         JFrame jf = new JFrame("Game Over");
         JPanel jp = new JPanel();
         jp.setLayout(new GridLayout(2, 1, 4,4));
@@ -275,8 +279,8 @@ class EndScreen {
         jp.add(winner);
         TextArea leaderboard = new TextArea();
         leaderboard.append("Here's the updated leaderboard:" +"\n");
-        while(JavaProjectClient.sin.hasNext()){
-            leaderboard.append(JavaProjectClient.sin.nextLine() + "\n");
+        for (String[] data: JavaProjectClient.leaderBoardData) {
+            leaderboard.append("Username: " + data[0] + " Wins: "+ data[1] + " Loss: " + data[2] + "\n");
         }
         jp.add(leaderboard);
         
@@ -284,6 +288,5 @@ class EndScreen {
         jf.add(jp);
         
         jf.setVisible(true);
-
     }
 }

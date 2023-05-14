@@ -28,7 +28,7 @@ public class JavaProjectClient{
     static WaitingRoom wr;
     static int playerID;
     static String userName;
-    
+    static ArrayList<String[]> leaderBoardData = new ArrayList<>();
     
     public static void main(String[] args) {
         new LoginInterface();
@@ -89,22 +89,35 @@ class ButtonPressed implements ActionListener{
         String loss = "";
         int counter = 0;
         try{
+            int max = JavaProjectClient.sin.nextInt();
+            JavaProjectClient.sin.nextLine();
             while(JavaProjectClient.sin.hasNext()){
                 if(counter == 0){
                    user = JavaProjectClient.sin.nextLine();
                 }
-                if(counter == 1){
+                else if(counter == 1){
                    wins = JavaProjectClient.sin.nextLine();
                 }
-                if(counter == 2){
+                else if(counter == 2){
                    loss = JavaProjectClient.sin.nextLine();
                 }
-                if(counter == 3){
+                else if(counter == 3){
                     JavaProjectClient.playerID = Integer.parseInt(JavaProjectClient.sin.nextLine());
-                    break;
+                }
+                else if (counter>3 && counter<4+max){
+                    System.out.println("hello");
+                    String user1 = JavaProjectClient.sin.nextLine();
+                    String wins1 = JavaProjectClient.sin.nextLine();
+                    String loss1 = JavaProjectClient.sin.nextLine();
+                    String[] data = {user1,wins1,loss1};
+                    JavaProjectClient.leaderBoardData.add(data);
+                    if (counter==max+3) {
+                        break;
+                    } 
                 }
                 counter += 1;
             }
+            System.out.println(JavaProjectClient.leaderBoardData.size());
         } catch(Exception e1){
             System.out.print(e1);
         }

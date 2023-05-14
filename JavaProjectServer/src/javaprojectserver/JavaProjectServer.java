@@ -8,7 +8,7 @@ import java.io.*;
 import java.net.*;
 import java.sql.*;
 import java.util.*;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 public class JavaProjectServer{
     private static final String URL = "jdbc:mariadb://localhost:3306/JPong";
@@ -68,12 +68,21 @@ public class JavaProjectServer{
                 String username = sin.nextLine();
                 
                 String[] userData = obtainUser(conn, username);
-
+                ArrayList<String[]> leaderBoardData = getLeaderboard(conn);
+                sout.println(leaderBoardData.size());
                 sout.println(userData[0]);
                 sout.println(userData[1]);
                 sout.println(userData[2]);
                 sout.println(numPlayers);
                
+                for (String[] data: leaderBoardData) {
+                    System.out.println(data[0]);
+                    System.out.println(data[1]);
+                    System.out.println(data[2]);
+                    sout.println(data[0]);
+                    sout.println(data[1]);
+                    sout.println(data[2]);
+                }
                 
                 ReadFromClient rfc = new ReadFromClient(numPlayers, sin);
                 WriteToClient wtc = new WriteToClient(numPlayers, sout);
@@ -101,59 +110,12 @@ public class JavaProjectServer{
                     
                     writeThread1.start();
                     writeThread2.start();
-                    
-                    checkWinner theCheck = new checkWinner(conn);
-                    Thread check = new Thread(theCheck);
-                    check.start();
+                   
                 }
             }
         } catch(Exception ex){
             System.out.println("Connection error");
         }
-    }
-    
-    
-    static class checkWinner implements Runnable{
-        
-        Connection db;
-        checkWinner(Connection conn){
-            db = conn;
-        }
-        
-        @Override
-        public void run() {
-            String userName;
-            while (true) {
-                try{
-                    Scanner p1Reader = new Scanner(p1Socket.getInputStream());
-                    Scanner p2Reader = new Scanner(p2Socket.getInputStream());
-                    if(p1Reader.nextLine().equals("Winner")){
-                        userName = p1Reader.nextLine();
-                        break;
-                    }
-                    if(p2Reader.nextLine().equals("Winner")){
-                         userName = p1Reader.nextLine();
-                         break;
-                    }
-                }catch(Exception e){}
-            }
-            try {
-                String[] userData = obtainUser(conn, userName);
-                PreparedStatement stmt2 = conn.prepareStatement("UPDATE Leaderboard SET numWins=? WHERE userName=?");
-                int wins = Integer.parseInt(userData[1])+1;
-                stmt2.setString(1, String.valueOf(wins));
-                stmt2.setString(2, userName);
-                stmt2.executeQuery();
-                stmt2 = conn.prepareStatement("SELECT * FROM Leaderboard");
-                ResultSet rs = stmt2.executeQuery();
-                while(rs.next()) {
-                    System.out.println(rs.getString("userName"));
-                    System.out.println(rs.getInt("numWins"));
-                }
-            } catch (Exception ex) {}
-
-        }
-    
     }
    
     private static String[] obtainUser(Connection conn, String username) throws SQLException {
@@ -183,6 +145,21 @@ public class JavaProjectServer{
         return data;
     }
     
+    
+    private static ArrayList<String[]> getLeaderboard (Connection conn) throws SQLException{
+        PreparedStatement stmt = conn.prepareStatement("SELECT * FROM Leaderboard");
+        ResultSet rs = stmt.executeQuery();
+        ArrayList<String[]> leaderboard = new ArrayList<String[]>(); 
+        while (rs.next()) {
+            String[] data = {"","",""};
+            data[0]= rs.getString("userName");
+            data[1]= String.valueOf(rs.getInt("numWins"));
+            data[2]= String.valueOf(rs.getInt("numLoss")); 
+            leaderboard.add(data);
+        }
+        System.out.println(leaderboard.size());
+        return leaderboard;
+    }
     
     private static void broadcast(String message) {
         for (Socket client : JavaProjectServer.clients.values()) {
